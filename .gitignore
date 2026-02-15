@@ -1,0 +1,18 @@
+# Hugo output directory
+/public/
+/resources/_gen/
+/.hugo_build.lock
+
+# Chart generation script (not needed in production)
+generate_charts.py
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+*.swp
+*.swo
+*~
+.vscode/
+.idea/

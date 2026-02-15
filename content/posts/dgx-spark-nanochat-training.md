@@ -233,18 +233,6 @@ One cool feature: on GSM8K, the model can use a **calculator tool**. It generate
 
 **Total wall clock: 12 hours 56 minutes**, from raw text data to a working chatbot, all on a single desktop machine.
 
-## What I Learned
-
-**1. The DGX Spark is legit.** 22% MFU on a desktop machine with no Flash Attention 3 is impressive. The unified memory means you never worry about OOM, 31 GB peak out of 128 GB available.
-
-**2. Software is the bottleneck.** The hardware is powerful, but CUDA 13.0, Triton compatibility, and PyTorch support for sm_121a are all still catching up. I needed to spend some time debugging environment issues (with the help of AI of course) than waiting for training.
-
-**3. Small models, small expectations.** A 286M-param model trained on 1B tokens is not going to match GPT-4. But it *does* learn — it absorbs factual knowledge, develops some reasoning, and when you train it on specific tasks (SpellingBee), it can be nearly perfect.
-
-**4. The Muon optimizer is interesting.** Orthogonalizing gradient momentum via the Polar Express algorithm is a clever trick. The 22% MFU suggests the compute is being used efficiently despite the SDPA fallback.
-
-**5. SFT MFU drops dramatically.** From 22.4% during pretraining to 2.4% during SFT. This is because SFT uses bestfit packing with variable-length conversations and longer sequence lengths (2048 vs 1024), which reduces GPU utilization.
-
 ## Reproduce It
 
 Everything is in my fork: [lakshmankolasani/nanochat](https://github.com/lakshmankolasani/nanochat)

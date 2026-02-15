@@ -18,7 +18,7 @@ buildExpired = false
 [params]
   env = "production"
   title = "Lakshman Kolasani"
-  description = "ML engineer exploring LLMs, GPU computing, and deep learning on NVIDIA hardware"
+  description = "Data Scientist exploring LLMs, GPU computing, and deep learning on NVIDIA hardware"
   author = "Lakshman Kolasani"
   defaultTheme = "auto"
   ShowReadingTime = true
@@ -40,7 +40,7 @@ buildExpired = false
 
   [params.homeInfoParams]
     Title = "Hi, I'm Lakshman"
-    Content = "ML engineer exploring LLMs, GPU computing, and deep learning. Currently training models on my NVIDIA DGX Spark."
+    Content = "Data Scientist exploring LLMs, GPU computing, and deep learning. Currently training models on my NVIDIA DGX Spark."
 
   [[params.socialIcons]]
     name = "github"

@@ -12,7 +12,7 @@ ShowToc: true
 TocOpen: true
 ---
 
-I just got an NVIDIA DGX Spark — a desktop supercomputer with a Grace Blackwell GPU — and the first thing I wanted to do was obvious: **train an LLM from scratch on it**.
+I got an NVIDIA DGX Spark recently, a desktop supercomputer with a Grace Blackwell GPU, and the first thing I wanted to do was obvious: **train an LLM from scratch to test it**.
 
 Not fine-tune someone else's model. Not run inference on a downloaded checkpoint. Train the whole thing — tokenizer, pretraining, supervised fine-tuning, evaluation — from raw text to a chatbot that can answer questions, write code, and count the letters in "strawberry."
 
@@ -20,7 +20,7 @@ Here's how it went.
 
 ## The Hardware
 
-The DGX Spark is unlike anything I've used before. It looks like a Mac Studio but it's packing serious compute:
+The DGX Spark packs serious compute:
 
 | Spec | Details |
 |------|---------|
@@ -31,23 +31,19 @@ The DGX Spark is unlike anything I've used before. It looks like a Mac Studio bu
 | **Peak BF16** | ~209 TFLOPS |
 | **Form Factor** | Desktop (no rack needed!) |
 
-The unified memory is the killer feature. 128 GB shared between CPU and GPU means you can fit models that would never work on a regular consumer GPU. The catch? It's a single GPU with a brand-new chip architecture, so software support is... a work in progress.
+The unified memory is the killer feature. 128 GB shared between CPU and GPU means you can fit models that would never work on a regular consumer GPU. It's a single GPU with a brand-new chip architecture, so software support is a work in progress.
 
 ## The Plan: nanochat
 
 I chose [nanochat](https://github.com/karpathy/nanochat) by Andrej Karpathy — it's the simplest end-to-end LLM training harness that exists. One repo, one complexity dial (`--depth`), and it covers everything: tokenization → pretraining → SFT → evaluation → chat.
 
-The question was: **will it even run on the DGX Spark?**
-
-Spoiler: not out of the box.
-
 ## Getting It Running (The Adventure)
 
-The GB10 GPU is so new that most of the ML ecosystem doesn't fully support it yet. Here's what I had to fix:
+The GB10 GPU is very new that most of the ML ecosystem doesn't fully support it yet. Here's what I had to fix:
 
 ### Problem 1: CUDA 13.0
 
-The GB10's compute capability is `sm_121a` — a chip name that the default `ptxas` bundled with Triton 3.5.0 doesn't recognize. Triton ships CUDA 12.8's assembler, but `sm_121a` needs CUDA 13.0.
+The GB10's compute capability is `sm_121a`, a chip name that the default `ptxas` bundled with Triton 3.5.0 doesn't recognize. Triton ships CUDA 12.8's assembler, but `sm_121a` needs CUDA 13.0.
 
 **Fix**: Install the CUDA 13.0.2 toolkit and point Triton at it:
 
@@ -58,17 +54,11 @@ export CUDA_HOME=/usr/local/cuda-13.0
 
 ### Problem 2: Flash Attention
 
-nanochat uses Flash Attention 3, which is compiled only for Hopper GPUs (sm90). The GB10 is Blackwell (sm100/sm121a) — FA3 kernels simply won't load.
+nanochat uses Flash Attention 3, which is compiled only for Hopper GPUs (sm90). The GB10 is Blackwell (sm100/sm121a). So, FA3 kernels simply won't load.
 
-**Fix**: Already handled! A [merged PR](https://github.com/karpathy/nanochat/pull/475) added an SDPA (Scaled Dot-Product Attention) fallback for non-Hopper GPUs. The detection logic checks if the GPU's compute major version is 9 (Hopper) — if not, it falls back to PyTorch's native SDPA.
+**Fix**: Already handled! A [merged PR](https://github.com/karpathy/nanochat/pull/475) added an SDPA (Scaled Dot-Product Attention) fallback for non-Hopper GPUs. The detection logic checks if the GPU's compute major version is 9 (Hopper). if not, it falls back to PyTorch's native SDPA.
 
-### Problem 3: HuggingFace Cache Permissions
-
-This one was embarrassing. The `~/.cache/huggingface` directory was owned by `root` (from an earlier sudo operation), so the SFT step couldn't download training datasets.
-
-**Fix**: `sudo chown -R $USER ~/.cache/huggingface`
-
-### Problem 4: PyTorch Compatibility
+### Problem 3: PyTorch Compatibility
 
 PyTorch 2.9+ with CUDA 13.0 is required. The `pyproject.toml` needed updating to point at the `pytorch-cu130` index instead of `pytorch-cu128`.
 
@@ -111,7 +101,7 @@ How does it compare to GPT-2 and GPT-4's tokenizers?
 
 Our 32K-vocab tokenizer matches GPT-2 (50K vocab) on English text and slightly beats it on scientific content. It's significantly behind GPT-4's 100K-vocab tokenizer on code and non-English text — but that's expected with a vocabulary 3× smaller.
 
-The fun metric here is **compression ratio** (bytes per token). Higher means each token captures more information. On FineWeb-Edu training data, we get **4.72 bytes/token** — slightly better than GPT-2's 4.67.
+The fun metric here is **compression ratio** (bytes per token). Higher means each token captures more information. On FineWeb-Edu training data, we get **4.72 bytes/token** which is slightly better than GPT-2's 4.67.
 
 ## Phase 2: Pretraining (5 hours 16 minutes)
 
@@ -131,7 +121,7 @@ This is the main event. Training a GPT from scratch on 1.16 billion tokens of we
 
 A few things about the optimizer that I found fascinating:
 
-**Muon** (used for all 2D weight matrices) is a recent optimizer that projects gradient momentum toward the nearest *orthogonal matrix* using the Polar Express algorithm. Orthogonal updates don't change activation scales — they only rotate them — leading to more stable training.
+**Muon** (used for all 2D weight matrices) is a recent optimizer that projects gradient momentum toward the nearest *orthogonal matrix* using the Polar Express algorithm. Orthogonal updates don't change activation scales. They only rotate them leading to more stable training.
 
 **AdamW** is used for embeddings and scalar parameters with different learning rates per group (embeddings get 0.3, the LM head gets 0.004).
 
@@ -148,7 +138,7 @@ I was expecting around 4-5% MFU (Model FLOPs Utilization) based on community rep
 | **Peak memory** | 31.5 GB / 121.7 GB (26%) |
 | **Total FLOPS** | 8.95 × 10¹⁷ |
 
-The memory usage was surprisingly modest — only 26% of the available 128 GB. There's clearly headroom for larger models (depth 16 or even 20).
+The memory usage was surprisingly modest, only 26% of the available 128 GB. There's clearly headroom for larger models (depth 16 or even 20).
 
 ### Final Metrics
 
@@ -158,7 +148,7 @@ The memory usage was surprisingly modest — only 26% of the available 128 GB. T
 
 ## Phase 3: Base Model Evaluation
 
-After pretraining, I evaluated the base model on the **DCLM CORE benchmark** — 21 NLP tasks covering reading comprehension, common sense reasoning, world knowledge, and more.
+After pretraining, I evaluated the base model on the **DCLM CORE benchmark**, 21 NLP tasks covering reading comprehension, common sense reasoning, world knowledge, and more.
 
 **CORE Score: 0.128** (0 = random, 1 = perfect)
 
@@ -202,7 +192,7 @@ The key insight: SFT uses **selective loss masking**. The model only learns to p
 - **851 iterations** (one full epoch through the data)
 - **Weight decay: 0** (prevents catastrophic forgetting of pretrained knowledge)
 - **LR schedule**: Constant for 80%, then linear decay to 0
-- **Final validation BPB**: 0.443 (much lower than pretraining — the task is easier when you only predict structured assistant responses)
+- **Final validation BPB**: 0.443 (much lower than pretraining, the task is easier when you only predict structured assistant responses)
 
 ## Phase 5: Chat Model Results
 
@@ -221,7 +211,7 @@ The moment of truth. How does the SFT model perform on real benchmarks?
 
 **ChatCORE Score: 0.212**
 
-The standout result is **SpellingBee at 98%** — "How many 'r's in 'strawberry'?" The model nails this because it was trained on 280K spelling examples. When you train on a specific task, small models can get surprisingly good at it.
+The standout result is **SpellingBee at 98%**. "How many 'r's in 'strawberry'?" The model nails this because it was trained on 280K spelling examples. When you train on a specific task, small models can get surprisingly good at it.
 
 The multiple-choice benchmarks hover near the 25% random baseline, which is honestly expected for a 286M-parameter model. For context, GPT-2 (1.5B params, trained on much more data) scores around 0.25 CORE. We're in the right ballpark.
 
@@ -241,13 +231,13 @@ One cool feature: on GSM8K, the model can use a **calculator tool**. It generate
 | MFU | 22.4% | 2.4% |
 | Training Time | 5h 16m | 4h 0m |
 
-**Total wall clock: 12 hours 56 minutes** — from raw text data to a working chatbot, all on a single desktop machine.
+**Total wall clock: 12 hours 56 minutes**, from raw text data to a working chatbot, all on a single desktop machine.
 
 ## What I Learned
 
-**1. The DGX Spark is legit.** 22% MFU on a desktop machine with no Flash Attention 3 is impressive. The unified memory means you never worry about OOM — 31 GB peak out of 128 GB available.
+**1. The DGX Spark is legit.** 22% MFU on a desktop machine with no Flash Attention 3 is impressive. The unified memory means you never worry about OOM, 31 GB peak out of 128 GB available.
 
-**2. Software is the bottleneck.** The hardware is powerful, but CUDA 13.0, Triton compatibility, and PyTorch support for sm_121a are all still catching up. I spent more time debugging environment issues than waiting for training.
+**2. Software is the bottleneck.** The hardware is powerful, but CUDA 13.0, Triton compatibility, and PyTorch support for sm_121a are all still catching up. I needed to spend some time debugging environment issues (with the help of AI of course) than waiting for training.
 
 **3. Small models, small expectations.** A 286M-param model trained on 1B tokens is not going to match GPT-4. But it *does* learn — it absorbs factual knowledge, develops some reasoning, and when you train it on specific tasks (SpellingBee), it can be nearly perfect.
 
@@ -277,4 +267,4 @@ The script handles everything: venv setup, dataset download, tokenizer training,
 
 ---
 
-*This post was generated from actual training results on my NVIDIA DGX Spark. The full training report is available in [my nanochat fork](https://github.com/lakshmankolasani/nanochat/blob/master/report.md).*
+*This post was generated from actual training results on my NVIDIA DGX Spark for testing purpose. The full training report is available in [my nanochat fork](https://github.com/lakshmankolasani/nanochat/blob/master/report.md). This blog was prepared with the help of AI.*

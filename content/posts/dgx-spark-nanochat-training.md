@@ -20,8 +20,6 @@ Here's how it went.
 
 ## The Hardware
 
-The DGX Spark packs serious compute:
-
 | Spec | Details |
 |------|---------|
 | **GPU** | 1× NVIDIA GB10 (Blackwell architecture) |
@@ -35,9 +33,9 @@ The unified memory is the killer feature. 128 GB shared between CPU and GPU mean
 
 ## The Plan: nanochat
 
-I chose [nanochat](https://github.com/karpathy/nanochat) by Andrej Karpathy — it's the simplest end-to-end LLM training harness that exists. One repo, one complexity dial (`--depth`), and it covers everything: tokenization → pretraining → SFT → evaluation → chat.
+I chose [nanochat](https://github.com/karpathy/nanochat) by Andrej Karpathy, it's the simplest end-to-end LLM training harness that exists. One repo, one complexity dial (`--depth`), and it covers everything: tokenization → pretraining → SFT → evaluation → chat.
 
-## Getting It Running (The Adventure)
+## Getting It Running
 
 The GB10 GPU is very new that most of the ML ecosystem doesn't fully support it yet. Here's what I had to fix:
 
@@ -99,13 +97,13 @@ How does it compare to GPT-2 and GPT-4's tokenizers?
 
 ![Tokenizer Comparison](/images/dgx-spark-nanochat/tokenizer_comparison.png)
 
-Our 32K-vocab tokenizer matches GPT-2 (50K vocab) on English text and slightly beats it on scientific content. It's significantly behind GPT-4's 100K-vocab tokenizer on code and non-English text — but that's expected with a vocabulary 3× smaller.
+Our 32K-vocab tokenizer matches GPT-2 (50K vocab) on English text and slightly beats it on scientific content. It's significantly behind GPT-4's 100K-vocab tokenizer on code and non-English text, but that's expected with a vocabulary 3× smaller.
 
 The fun metric here is **compression ratio** (bytes per token). Higher means each token captures more information. On FineWeb-Edu training data, we get **4.72 bytes/token** which is slightly better than GPT-2's 4.67.
 
 ## Phase 2: Pretraining (5 hours 16 minutes)
 
-This is the main event. Training a GPT from scratch on 1.16 billion tokens of web text.
+This is the main thing I wanted to test. Training a GPT from scratch on 1.16 billion tokens of web text.
 
 ### The Setup
 
@@ -119,17 +117,15 @@ This is the main event. Training a GPT from scratch on 1.16 billion tokens of we
 | **Precision** | BF16 |
 | **Iterations** | 2,205 |
 
-A few things about the optimizer that I found fascinating:
+A few things about the optimizer:
 
-**Muon** (used for all 2D weight matrices) is a recent optimizer that projects gradient momentum toward the nearest *orthogonal matrix* using the Polar Express algorithm. Orthogonal updates don't change activation scales. They only rotate them leading to more stable training.
+**Muon** is used for all 2D weight matrices.
 
 **AdamW** is used for embeddings and scalar parameters with different learning rates per group (embeddings get 0.3, the LM head gets 0.004).
 
 The **learning rate schedule** is: no warmup → constant for first 50% → linear decay to 0 over the last 50%.
 
-### The Surprise: 22.4% MFU
-
-I was expecting around 4-5% MFU (Model FLOPs Utilization) based on community reports. Instead, I got **22.4%!**
+### 22.4% MFU
 
 | Metric | Value |
 |--------|-------|
@@ -196,7 +192,7 @@ The key insight: SFT uses **selective loss masking**. The model only learns to p
 
 ## Phase 5: Chat Model Results
 
-The moment of truth. How does the SFT model perform on real benchmarks?
+How does the SFT model perform on real benchmarks?
 
 ![Chat Evaluation Results](/images/dgx-spark-nanochat/chat_eval.png)
 
@@ -233,7 +229,7 @@ One cool feature: on GSM8K, the model can use a **calculator tool**. It generate
 
 **Total wall clock: 12 hours 56 minutes**, from raw text data to a working chatbot, all on a single desktop machine.
 
-## Reproduce It
+## Reproduce It To Test DGX Spark in less than a Day
 
 Everything is in my fork: [lakshmankolasani/nanochat](https://github.com/lakshmankolasani/nanochat)
 

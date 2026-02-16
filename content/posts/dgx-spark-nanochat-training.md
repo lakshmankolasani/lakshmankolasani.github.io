@@ -251,4 +251,4 @@ The script handles everything: venv setup, dataset download, tokenizer training,
 
 ---
 
-*This post was generated from actual training results on my NVIDIA DGX Spark for testing purpose. The full training report is available in [my nanochat fork](https://github.com/lakshmankolasani/nanochat/blob/master/report.md). This blog was prepared with the help of AI.*
+*This post was generated from actual training results on my NVIDIA DGX Spark for testing purpose. The full training code with modifications is available in [my nanochat fork](https://github.com/karpathy/nanochat/compare/master...lakshmankolasani:nanochat:master). This blog was prepared with the help of AI.*

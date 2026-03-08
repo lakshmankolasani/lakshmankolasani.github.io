@@ -1,0 +1,131 @@
+/* ===== Accent Colors ===== */
+:root {
+    --accent: #2563eb;
+    --accent-hover: #1d4ed8;
+}
+
+.dark {
+    --accent: #60a5fa;
+    --accent-hover: #93bbfd;
+}
+
+a {
+    color: var(--accent);
+}
+
+a:hover {
+    color: var(--accent-hover);
+}
+
+/* ===== Code Blocks ===== */
+.highlight pre,
+pre {
+    border-radius: 8px;
+    padding: 1rem 1.2rem;
+    line-height: 1.6;
+    font-size: 0.88rem;
+}
+
+code {
+    font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', 'Cascadia Code', monospace;
+}
+
+/* Inline code */
+:not(pre) > code {
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-size: 0.85em;
+}
+
+/* ===== Table of Contents ===== */
+.toc {
+    background: var(--code-bg);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 8px 8px 0;
+    padding: 0.8rem 1.2rem;
+    margin-bottom: 1.5rem;
+}
+
+.toc details summary {
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.toc ul {
+    font-size: 0.92rem;
+    line-height: 1.8;
+}
+
+/* ===== Tables ===== */
+table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1.2rem 0;
+    font-size: 0.92rem;
+}
+
+th {
+    background: var(--code-bg);
+    font-weight: 700;
+    text-align: left;
+}
+
+th, td {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--border);
+}
+
+tr:nth-child(even) {
+    background: var(--code-bg);
+}
+
+/* ===== Post Content ===== */
+.post-content h2 {
+    margin-top: 2.5rem;
+    padding-bottom: 0.3rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.post-content h3 {
+    margin-top: 1.8rem;
+}
+
+/* Bold text in tables for highlighted rows */
+.post-content table strong {
+    color: var(--accent);
+}
+
+/* ===== Blockquotes ===== */
+blockquote {
+    border-left: 3px solid var(--accent);
+    padding-left: 1rem;
+    font-style: italic;
+    opacity: 0.9;
+}
+
+/* ===== Profile Mode ===== */
+.profile .profile_inner h1 {
+    font-size: 1.8rem;
+}
+
+.profile .profile_inner .tagline {
+    font-size: 1rem;
+    opacity: 0.85;
+}
+
+/* ===== Post List ===== */
+.post-entry {
+    border-radius: 8px;
+    margin-bottom: 0.8rem;
+    transition: transform 0.15s ease;
+}
+
+.post-entry:hover {
+    transform: translateY(-2px);
+}
+
+/* ===== Footer ===== */
+.footer {
+    font-size: 0.82rem;
+    opacity: 0.7;
+}

@@ -242,6 +242,17 @@ bash runs/speedrun_dgx_spark.sh
 
 The script handles everything: venv setup, dataset download, tokenizer training, pretraining, evaluation, SFT, chat eval, and report generation. Total time: ~13 hours.
 
+## AI-Assisted Workflow
+
+This entire project — from debugging to documentation — was done using AI-assisted development. I used [GitHub Copilot](https://github.com/features/copilot) and [Claude Opus](https://claude.ai) throughout:
+
+- **Debugging CUDA compatibility**: Claude helped diagnose the `sm_121a` / Triton `ptxas` mismatch and find the CUDA 13.0 fix
+- **Adapting the training script**: Copilot and Claude assisted in writing the DGX Spark speedrun script and adapting nanochat's config for the GB10 GPU
+- **Monitoring and fixing errors mid-run**: AI tools helped interpret training logs and fix issues during long training runs
+- **Writing this post**: The blog itself was drafted with AI assistance from the raw training outputs
+
+At this point, the AI did more work than I did. That's the real takeaway — with the right tools, a single person can go from unboxing new hardware to a trained chatbot in a weekend.
+
 ## What's Next
 
 - **Deeper models**: With only 26% memory used at depth=12, there's room for depth=16 or even depth=20
@@ -251,4 +262,4 @@ The script handles everything: venv setup, dataset download, tokenizer training,
 
 ---
 
-*This post was generated from actual training results on my NVIDIA DGX Spark for testing purpose. The full training code with modifications is available in [my nanochat fork](https://github.com/karpathy/nanochat/compare/master...lakshmankolasani:nanochat:master). This blog was prepared with the help of AI.*
+*This post was generated from actual training results on my NVIDIA DGX Spark. The full training code is available in [my nanochat fork](https://github.com/lakshmankolasani/nanochat).*
